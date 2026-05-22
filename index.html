@@ -253,7 +253,7 @@
 const API_KEY = '$2a$10$gDB4qWK0Z3aoeo/siovQZu.zFOyecsvMNO4QBbnCEK.tY/Ovcplki';
 const BIN_NAME = 'purchase-list-db';
 const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
-let BIN_ID = localStorage.getItem('pl_bin_id') || '';
+let BIN_ID = '6a0ff2946877513b27b27766';
 
 let currentUser = '', items = [], selStar = 0, histFilter = 'all';
 
@@ -280,7 +280,7 @@ async function ensureBin() {
     });
     const d = await r.json();
     BIN_ID = d.metadata?.id || '';
-    if (BIN_ID) localStorage.setItem('pl_bin_id', BIN_ID);
+
     return !!BIN_ID;
   } catch { return false; }
 }
