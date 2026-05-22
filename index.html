@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>購買清單確認</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f4;
+    --bg3: #eeece8;
+    --text: #1a1a18;
+    --text2: #6b6b68;
+    --text3: #9f9f9b;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #252523;
+      --bg3: #2e2e2b;
+      --text: #f0ede8;
+      --text2: #a0a09b;
+      --text3: #6a6a66;
+      --border: rgba(255,255,255,0.10);
+      --border2: rgba(255,255,255,0.18);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+
+  .app { max-width: 480px; margin: 0 auto; background: var(--bg3); min-height: 100vh; position: relative; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Login */
+  .login-wrap { padding: 3rem 1.25rem 2rem; }
+  .login-icon { text-align: center; margin-bottom: 1.5rem; }
+  .login-icon i { font-size: 48px; color: var(--text3); }
+  .login-title { font-size: 22px; font-weight: 600; text-align: center; margin-bottom: 6px; }
+  .login-sub { font-size: 14px; color: var(--text2); text-align: center; margin-bottom: 2rem; }
+  .member-card { display: flex; align-items: center; gap: 14px; padding: 16px; border: 0.5px solid var(--border2); border-radius: var(--radius-lg); background: var(--bg); margin-bottom: 10px; cursor: pointer; transition: background 0.12s; }
+  .member-card:active { background: var(--bg2); }
+  .member-card .arrow { margin-left: auto; color: var(--text3); font-size: 18px; }
+
+  /* Avatar */
+  .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 18px; flex-shrink: 0; }
+  .avatar.sm { width: 26px; height: 26px; font-size: 11px; }
+  .av-una { background: #CECBF6; color: #3C3489; }
+  .av-david { background: #9FE1CB; color: #085041; }
+  .av-baby { background: #F5C4B3; color: #712B13; }
+  .member-name { font-size: 16px; font-weight: 600; }
+  .member-role { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+  /* Topbar */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 10px; background: var(--bg); border-bottom: 0.5px solid var(--border); position: sticky; top: 0; z-index: 10; }
+  .topbar-title { font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .sync-tag { font-size: 11px; padding: 3px 8px; border-radius: 999px; background: var(--bg2); color: var(--text3); border: 0.5px solid var(--border); }
+  .sync-tag.ok { color: #3B6D11; background: #EAF3DE; border-color: #97C459; }
+  .sync-tag.err { color: #A32D2D; background: #FCEBEB; border-color: #F09595; }
+  .user-pill { display: flex; align-items: center; gap: 6px; padding: 5px 10px; border: 0.5px solid var(--border2); border-radius: 999px; cursor: pointer; font-size: 13px; color: var(--text2); background: var(--bg); }
+
+  /* Main content */
+  .main-content { padding: 16px 16px 80px; }
+
+  /* Bottom nav */
+  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; display: flex; background: var(--bg); border-top: 0.5px solid var(--border); padding-bottom: env(safe-area-inset-bottom, 0); z-index: 10; }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 4px 8px; border: none; background: none; cursor: pointer; color: var(--text3); font-size: 11px; }
+  .nav-btn.active { color: var(--text); }
+  .nav-btn i { font-size: 24px; }
+  .badge-cnt { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 999px; background: #D85A30; color: #fff; font-size: 11px; font-weight: 600; margin-left: 3px; vertical-align: middle; }
+
+  /* Panes */
+  .pane { display: none; }
+  .pane.active { display: block; }
+  .section-label { font-size: 12px; font-weight: 600; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; }
+
+  /* Form */
+  .field { margin-bottom: 14px; }
+  .field label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 5px; }
+  .field input, .field textarea {
+    width: 100%; font-size: 16px; padding: 11px 13px;
+    border: 0.5px solid var(--border2); border-radius: var(--radius);
+    background: var(--bg); color: var(--text); outline: none; -webkit-appearance: none;
+  }
+  .field input:focus, .field textarea:focus { border-color: #185FA5; box-shadow: 0 0 0 3px rgba(24,95,165,0.12); }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .stars-row { display: flex; gap: 6px; padding: 4px 0; }
+  .star { font-size: 32px; cursor: pointer; color: var(--border2); user-select: none; }
+  .star.on { color: #e4a011; }
+  .btn-primary { width: 100%; padding: 15px; border-radius: var(--radius); border: none; font-size: 16px; font-weight: 600; cursor: pointer; background: #185FA5; color: #fff; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px; }
+  .btn-primary:active { opacity: 0.85; }
+  .btn-ghost { width: 100%; padding: 13px; border-radius: var(--radius); border: 0.5px solid var(--border2); font-size: 15px; cursor: pointer; background: var(--bg2); color: var(--text2); margin-top: 10px; }
+
+  /* Cards */
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 14px; margin-bottom: 10px; }
+  .card-row { display: flex; align-items: flex-start; gap: 10px; }
+  .card-body { flex: 1; min-width: 0; }
+  .card-name { font-size: 15px; font-weight: 600; word-break: break-word; }
+  .card-amount { font-size: 15px; font-weight: 600; color: #0F6E56; white-space: nowrap; }
+  .card-meta { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 6px; }
+  .meta { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 3px; }
+  .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-top: 5px; }
+  .b-pending { background: #FAEEDA; color: #854F0B; }
+  .b-approved { background: #EAF3DE; color: #3B6D11; }
+  .b-rejected { background: #FCEBEB; color: #A32D2D; }
+  .divider { height: 0.5px; background: var(--border); margin: 12px 0; }
+  .review-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .rv-btn { padding: 13px; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .rv-approve { background: #EAF3DE; color: #3B6D11; }
+  .rv-reject { background: #FCEBEB; color: #A32D2D; }
+  .rv-approve:active { background: #C0DD97; }
+  .rv-reject:active { background: #F7C1C1; }
+  .link-row { display: flex; align-items: center; gap: 5px; margin-top: 6px; }
+  .link-a { color: #185FA5; font-size: 13px; text-decoration: none; word-break: break-all; flex: 1; }
+  .link-a:hover { text-decoration: underline; }
+  .note-text { font-size: 13px; color: var(--text2); margin-top: 6px; line-height: 1.5; }
+  .review-info { font-size: 12px; color: var(--text2); margin-top: 6px; }
+
+  /* Filter pills */
+  .filter-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; scrollbar-width: none; }
+  .filter-scroll::-webkit-scrollbar { display: none; }
+  .fpill { padding: 7px 14px; border-radius: 999px; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text2); font-size: 13px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .fpill.active { background: var(--text); color: var(--bg); border-color: transparent; }
+
+  /* Empty */
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--text3); }
+  .empty i { font-size: 40px; display: block; margin-bottom: 10px; }
+  .empty p { font-size: 14px; }
+
+  /* Toast */
+  .toast-wrap { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 100; width: calc(100% - 32px); max-width: 440px; pointer-events: none; }
+  .toast { background: var(--text); color: var(--bg); padding: 12px 16px; border-radius: var(--radius); font-size: 14px; font-weight: 500; opacity: 0; transition: opacity 0.25s; text-align: center; }
+  .toast.show { opacity: 1; }
+
+  /* Loading overlay */
+  .loading-overlay { position: fixed; inset: 0; background: var(--bg3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 200; }
+  .loading-overlay.hidden { display: none; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border2); border-top-color: #185FA5; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--text2); }
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">連線中...</div>
+</div>
+
+<div class="toast-wrap"><div class="toast" id="toast"></div></div>
+
+<div class="app">
+
+  <!-- Login -->
+  <div class="screen active" id="screen-login">
+    <div class="login-wrap">
+      <div class="login-icon"><i class="ti ti-shopping-cart"></i></div>
+      <div class="login-title">購買清單確認</div>
+      <div class="login-sub">請選擇您的身分</div>
+      <div class="member-card" onclick="login('UNA')">
+        <div class="avatar av-una">U</div>
+        <div><div class="member-name">Una</div><div class="member-role">可申請 · 審核 David / Baby 的項目</div></div>
+        <i class="ti ti-chevron-right arrow"></i>
+      </div>
+      <div class="member-card" onclick="login('DAVID')">
+        <div class="avatar av-david">D</div>
+        <div><div class="member-name">David</div><div class="member-role">可申請 · 審核 Una / Baby 的項目</div></div>
+        <i class="ti ti-chevron-right arrow"></i>
+      </div>
+      <div class="member-card" onclick="login('BABY')">
+        <div class="avatar av-baby">B</div>
+        <div><div class="member-name">Baby</div><div class="member-role">可申請 · 由 Una 或 David 審核</div></div>
+        <i class="ti ti-chevron-right arrow"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="screen" id="screen-main">
+    <div class="topbar">
+      <div class="topbar-title"><i class="ti ti-shopping-cart" style="font-size:20px"></i>購買清單</div>
+      <div class="topbar-right">
+        <span class="sync-tag" id="sync-tag">連線中</span>
+        <div class="user-pill" onclick="logout()">
+          <div class="avatar sm" id="topbar-av"></div>
+          <span id="topbar-name"></span>
+          <i class="ti ti-logout" style="font-size:15px"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-content">
+
+      <!-- Add pane -->
+      <div class="pane active" id="pane-add">
+        <div class="section-label">新增申請</div>
+        <div class="field"><label>日期</label><input type="date" id="f-date"></div>
+        <div class="field"><label>項目名稱</label><input type="text" id="f-item" placeholder="請輸入購買項目"></div>
+        <div class="field"><label>金額 (NT$)</label><input type="number" id="f-amount" placeholder="0" min="0" inputmode="numeric"></div>
+        <div class="field">
+          <label>渴望程度</label>
+          <div class="stars-row" id="stars-input">
+            <span class="star" data-v="1">★</span><span class="star" data-v="2">★</span>
+            <span class="star" data-v="3">★</span><span class="star" data-v="4">★</span><span class="star" data-v="5">★</span>
+          </div>
+        </div>
+        <div class="field"><label>連結網址</label><input type="url" id="f-url" placeholder="https://" inputmode="url"></div>
+        <div class="field"><label>備註</label><textarea id="f-note" placeholder="補充說明..."></textarea></div>
+        <button class="btn-primary" onclick="submitItem()"><i class="ti ti-send" style="font-size:18px"></i>送出申請</button>
+        <button class="btn-ghost" onclick="resetForm()">清除</button>
+      </div>
+
+      <!-- Review pane -->
+      <div class="pane" id="pane-review">
+        <div class="section-label">待我審核</div>
+        <div id="review-list"></div>
+      </div>
+
+      <!-- History pane -->
+      <div class="pane" id="pane-history">
+        <div class="filter-scroll">
+          <button class="fpill active" onclick="setFilter('all',this)">全部</button>
+          <button class="fpill" onclick="setFilter('pending',this)">待審核</button>
+          <button class="fpill" onclick="setFilter('approved',this)">已核准</button>
+          <button class="fpill" onclick="setFilter('rejected',this)">已拒絕</button>
+          <button class="fpill" onclick="setFilter('mine',this)">我提出的</button>
+        </div>
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <button class="nav-btn active" id="nav-add" onclick="switchPane('add')">
+        <i class="ti ti-plus"></i>新增
+      </button>
+      <button class="nav-btn" id="nav-review" onclick="switchPane('review')">
+        <i class="ti ti-clipboard-check"></i><span id="nav-review-lbl">審核</span>
+      </button>
+      <button class="nav-btn" id="nav-history" onclick="switchPane('history')">
+        <i class="ti ti-list"></i>記錄
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_KEY = '$2a$10$gDB4qWK0Z3aoeo/siovQZu.zFOyecsvMNO4QBbnCEK.tY/Ovcplki';
+const BIN_NAME = 'purchase-list-db';
+const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
+let BIN_ID = localStorage.getItem('pl_bin_id') || '';
+
+let currentUser = '', items = [], selStar = 0, histFilter = 'all';
+
+const avCfg = {
+  UNA:   { cls: 'av-una',   letter: 'U', bg: '#CECBF6', color: '#3C3489', display: 'Una'   },
+  DAVID: { cls: 'av-david', letter: 'D', bg: '#9FE1CB', color: '#085041', display: 'David' },
+  BABY:  { cls: 'av-baby',  letter: 'B', bg: '#F5C4B3', color: '#712B13', display: 'Baby'  }
+};
+
+function getReviewers(p) {
+  if (p === 'UNA')   return ['DAVID'];
+  if (p === 'DAVID') return ['UNA'];
+  return ['UNA', 'DAVID'];
+}
+
+/* ── JSONBin API ── */
+async function ensureBin() {
+  if (BIN_ID) return true;
+  try {
+    const r = await fetch(`${JSONBIN_BASE}/b`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY, 'X-Bin-Name': BIN_NAME, 'X-Bin-Private': 'true' },
+      body: JSON.stringify({ items: [] })
+    });
+    const d = await r.json();
+    BIN_ID = d.metadata?.id || '';
+    if (BIN_ID) localStorage.setItem('pl_bin_id', BIN_ID);
+    return !!BIN_ID;
+  } catch { return false; }
+}
+
+async function fetchData() {
+  if (!await ensureBin()) return false;
+  try {
+    const r = await fetch(`${JSONBIN_BASE}/b/${BIN_ID}/latest`, { headers: { 'X-Master-Key': API_KEY } });
+    const d = await r.json();
+    items = d.record?.items || [];
+    return true;
+  } catch { return false; }
+}
+
+async function pushData() {
+  setSyncTag('syncing');
+  if (!await ensureBin()) { setSyncTag('err'); return; }
+  try {
+    await fetch(`${JSONBIN_BASE}/b/${BIN_ID}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+      body: JSON.stringify({ items })
+    });
+    setSyncTag('ok');
+  } catch { setSyncTag('err'); }
+}
+
+/* ── UI helpers ── */
+function setSyncTag(state) {
+  const t = document.getElementById('sync-tag');
+  if (!t) return;
+  const map = { syncing: ['同步中...', ''], ok: ['已同步', 'ok'], err: ['離線', 'err'] };
+  t.textContent = map[state][0];
+  t.className = 'sync-tag ' + map[state][1];
+}
+
+function showLoading(msg) {
+  const o = document.getElementById('loading-overlay');
+  o.querySelector('.loading-text').textContent = msg || '載入中...';
+  o.classList.remove('hidden');
+}
+function hideLoading() { document.getElementById('loading-overlay').classList.add('hidden'); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function starsHtml(n) {
+  return Array.from({length:5},(_,i)=>`<span style="color:${i<n?'#e4a011':'#ccc'}">★</span>`).join('');
+}
+
+/* ── Login / Logout ── */
+async function login(user) {
+  showLoading('連線資料庫...');
+  const ok = await fetchData();
+  hideLoading();
+  if (!ok) { showToast('⚠ 無法連線，請檢查網路'); return; }
+  currentUser = user;
+  const av = avCfg[user];
+  const ta = document.getElementById('topbar-av');
+  ta.className = 'avatar sm ' + av.cls;
+  ta.textContent = av.letter;
+  document.getElementById('topbar-name').textContent = av.display;
+  document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-main').classList.add('active');
+  switchPane('add');
+  updateBadge();
+  setSyncTag('ok');
+}
+
+function logout() {
+  currentUser = ''; selStar = 0; histFilter = 'all';
+  hlStars(0);
+  document.getElementById('screen-main').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  resetForm();
+  ['add','review','history'].forEach(n => {
+    document.getElementById('pane-'+n).classList.remove('active');
+    document.getElementById('nav-'+n).classList.remove('active');
+  });
+  document.getElementById('pane-add').classList.add('active');
+  document.getElementById('nav-add').classList.add('active');
+}
+
+/* ── Stars ── */
+document.querySelectorAll('#stars-input .star').forEach(s => {
+  s.addEventListener('touchstart', e => { e.preventDefault(); pickStar(+s.dataset.v); }, { passive: false });
+  s.addEventListener('click', () => pickStar(+s.dataset.v));
+  s.addEventListener('mouseover', () => hlStars(+s.dataset.v));
+  s.addEventListener('mouseout', () => hlStars(selStar));
+});
+function pickStar(n) { selStar = n; hlStars(n); }
+function hlStars(n) { document.querySelectorAll('#stars-input .star').forEach((s,i) => s.classList.toggle('on', i<n)); }
+
+/* ── Panes ── */
+function switchPane(name) {
+  ['add','review','history'].forEach(n => {
+    document.getElementById('pane-'+n).classList.toggle('active', n===name);
+    document.getElementById('nav-'+n).classList.toggle('active', n===name);
+  });
+  if (name === 'review')  renderReview();
+  if (name === 'history') renderHistory();
+}
+
+function updateBadge() {
+  const cnt = items.filter(x => x.status === 'pending' && getReviewers(x.proposer).includes(currentUser)).length;
+  const lbl = document.getElementById('nav-review-lbl');
+  const ex = lbl.querySelector('.badge-cnt'); if (ex) ex.remove();
+  if (cnt > 0) { const c = document.createElement('span'); c.className = 'badge-cnt'; c.textContent = cnt; lbl.appendChild(c); }
+}
+
+/* ── Form ── */
+function resetForm() {
+  selStar = 0; hlStars(0);
+  ['f-item','f-amount','f-url','f-note'].forEach(id => document.getElementById(id).value = '');
+  const fd = document.getElementById('f-date');
+  if (fd) fd.value = new Date().toISOString().slice(0,10);
+}
+
+async function submitItem() {
+  const item = document.getElementById('f-item').value.trim();
+  if (!item) { showToast('請填寫項目名稱'); return; }
+  const obj = {
+    id: Date.now(),
+    date: document.getElementById('f-date').value,
+    proposer: currentUser, item,
+    amount: document.getElementById('f-amount').value,
+    stars: selStar,
+    url: document.getElementById('f-url').value.trim(),
+    note: document.getElementById('f-note').value.trim(),
+    status: 'pending', reviewer: '', reviewedAt: ''
+  };
+  items.unshift(obj);
+  resetForm();
+  showToast('✓ 申請已送出');
+  updateBadge();
+  await pushData();
+}
+
+/* ── Review ── */
+function renderReview() {
+  const list = document.getElementById('review-list');
+  const mine = items.filter(x => x.status === 'pending' && getReviewers(x.proposer).includes(currentUser));
+  if (!mine.length) {
+    list.innerHTML = '<div class="empty"><i class="ti ti-circle-check"></i><p>沒有待審核項目</p></div>';
+    return;
+  }
+  list.innerHTML = mine.map(reviewCardHtml).join('');
+}
+
+function reviewCardHtml(x) {
+  const av = avCfg[x.proposer] || avCfg.UNA;
+  return `<div class="card">
+    <div class="card-row">
+      <div class="avatar" style="width:40px;height:40px;font-size:15px;background:${av.bg};color:${av.color}">${av.letter}</div>
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
+          <div class="card-name">${esc(x.item)}</div>
+          ${x.amount ? `<div class="card-amount">NT$ ${Number(x.amount).toLocaleString()}</div>` : ''}
+        </div>
+        <div class="card-meta">
+          <span class="meta"><i class="ti ti-user" style="font-size:13px"></i>${av.display}</span>
+          ${x.date ? `<span class="meta"><i class="ti ti-calendar" style="font-size:13px"></i>${x.date}</span>` : ''}
+          ${x.stars ? `<span class="meta" style="color:#e4a011">${starsHtml(x.stars)}</span>` : ''}
+        </div>
+        ${x.url ? `<div class="link-row"><i class="ti ti-external-link" style="font-size:13px;color:var(--text2)"></i><a class="link-a" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.url)}</a></div>` : ''}
+        ${x.note ? `<div class="note-text">${esc(x.note)}</div>` : ''}
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="review-btns">
+      <button class="rv-btn rv-approve" onclick="doReview(${x.id},'approved')"><i class="ti ti-check" style="font-size:17px"></i>核准</button>
+      <button class="rv-btn rv-reject" onclick="doReview(${x.id},'rejected')"><i class="ti ti-x" style="font-size:17px"></i>拒絕</button>
+    </div>
+  </div>`;
+}
+
+async function doReview(id, status) {
+  const idx = items.findIndex(x => x.id === id);
+  if (idx < 0) return;
+  items[idx].status = status;
+  items[idx].reviewer = currentUser;
+  items[idx].reviewedAt = new Date().toLocaleDateString('zh-TW');
+  showToast(status === 'approved' ? '✓ 已核准' : '已拒絕');
+  renderReview(); updateBadge();
+  await pushData();
+}
+
+/* ── History ── */
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  let filtered = items;
+  if (histFilter === 'mine') filtered = items.filter(x => x.proposer === currentUser);
+  else if (histFilter !== 'all') filtered = items.filter(x => x.status === histFilter);
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty"><i class="ti ti-database-off"></i><p>沒有符合的紀錄</p></div>';
+    return;
+  }
+  const bMap = { pending: 'b-pending', approved: 'b-approved', rejected: 'b-rejected' };
+  const lMap = { pending: '待審核', approved: '已核准', rejected: '已拒絕' };
+  list.innerHTML = filtered.map(x => {
+    const av = avCfg[x.proposer] || avCfg.UNA;
+    return `<div class="card">
+      <div class="card-row">
+        <div class="avatar" style="width:40px;height:40px;font-size:15px;background:${av.bg};color:${av.color}">${av.letter}</div>
+        <div class="card-body">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
+            <div class="card-name">${esc(x.item)}</div>
+            ${x.amount ? `<div class="card-amount">NT$ ${Number(x.amount).toLocaleString()}</div>` : ''}
+          </div>
+          <span class="badge ${bMap[x.status]}">${lMap[x.status]}</span>
+          <div class="card-meta" style="margin-top:6px">
+            <span class="meta"><i class="ti ti-user" style="font-size:13px"></i>${av.display}</span>
+            ${x.date ? `<span class="meta"><i class="ti ti-calendar" style="font-size:13px"></i>${x.date}</span>` : ''}
+            ${x.stars ? `<span class="meta" style="color:#e4a011">${starsHtml(x.stars)}</span>` : ''}
+          </div>
+          ${x.url ? `<div class="link-row"><i class="ti ti-external-link" style="font-size:13px;color:var(--text2)"></i><a class="link-a" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.url)}</a></div>` : ''}
+          ${x.note ? `<div class="note-text">${esc(x.note)}</div>` : ''}
+          ${x.status !== 'pending' ? `<div class="review-info">${x.status==='approved'?'✓ 核准':'✗ 拒絕'}：${avCfg[x.reviewer]?.display||x.reviewer} · ${x.reviewedAt}</div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setFilter(f, btn) {
+  histFilter = f;
+  document.querySelectorAll('.fpill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHistory();
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+hideLoading();
+</script>
+</body>
+</html>
